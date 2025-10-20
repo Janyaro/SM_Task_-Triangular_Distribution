@@ -1,6 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sm_task/Logic.dart';
-
+import 'package:fl_chart/fl_chart.dart';
+import 'package:sm_task/triangular_chart.dart';
+import 'package:sm_task/widget/input_field.dart';
 class TriangularCalculator extends StatefulWidget {
   const TriangularCalculator({super.key});
 
@@ -15,41 +18,23 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
   final TextEditingController targetController = TextEditingController(text: '150');
   
   double probability = 0.0;
-  String resultText = '';
-  String? minValue ; 
-  String? maxValue ;
-  String? modeValue ;
-  String? TargetValue;
+  double area = 0.0;
+  String selectedOption = 'less than'; // Default option
 
-  @override
-  // void initState() {
-  //   super.initState();
-  //   calculateProbability();
-  // }
   Logic triangularSolution = Logic();
-  void calculateProbability() {
+
+ void _calculateProbability() {
     double a = double.tryParse(minController.text) ?? 0;
     double b = double.tryParse(modeController.text) ?? 0;
     double c = double.tryParse(maxController.text) ?? 0;
     double x = double.tryParse(targetController.text) ?? 0;
-
-    if (a >= b || b >= c) {
-      setState(() {
-        resultText = 'Error: Must satisfy Min < Mode < Max';
-        probability = 0.0;
-      });
-      return;
-    }
-
-    double prob =triangularSolution.calculateProbability(a, b, c, x);
     
     setState(() {
-      probability = prob;
-      resultText = 'Pr(X < \$$x) = ${(prob * 100).toStringAsFixed(1)}%';
+      probability = triangularSolution.calculateProbability(a, b, c, x);
+      area = triangularSolution.calculateArea(selectedOption, x, a, b, c);
     });
   }
 
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,15 +65,19 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildInputField('Minimum (a)', minController, 'Unit'),
+                      ReuseInputField(label:  'Minimum (a)',controller:  minController,suffix:  'Unit'),
                       const SizedBox(height: 12),
-                      _buildInputField('Mode (b - Most Likely)', modeController, 'Unit'),
+                      ReuseInputField(label: 'Mode (b - Most Likely)',controller:  modeController,suffix:  'Unit'),
                       const SizedBox(height: 12),
-                      _buildInputField('Maximum (c)', maxController, 'Unit'),
+                      ReuseInputField(label: 'Maximum (c)',controller:  maxController, suffix: 'Unit'),
                       const SizedBox(height: 16),
                       const Divider(),
                       const SizedBox(height: 8),
-                      _buildInputField('Target Value (x)', targetController, 'Unit'),
+                      ReuseInputField(label: 'Target Value (x)',controller:  targetController,suffix:  'Unit'),
+                      
+                      // Dropdown for operation selection
+                      const SizedBox(height: 16),
+                      _buildOperationDropdown(),
                     ],
                   ),
                 ),
@@ -100,7 +89,18 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: calculateProbability,
+                  onPressed: (){
+                        double a = double.tryParse(minController.text) ?? 0;
+    double b = double.tryParse(modeController.text) ?? 0;
+     double c = double.tryParse(maxController.text) ?? 0;
+     double x = double.tryParse(targetController.text) ?? 0;
+                  
+              setState(() {
+                   probability = triangularSolution.calculateProbability(a, b, c, x);
+                   area  = triangularSolution.calculateArea(selectedOption, x, a, b, c);
+              });
+            print(probability.toString());
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[700],
                     foregroundColor: Colors.white,
@@ -109,8 +109,18 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                   ),
                   child: const Text('Calculate Probability'),
                 ),
+
               ),
-              
+// Chart Section - Simple call
+// Chart Section
+TriangularChart(
+  a: double.tryParse(minController.text) ?? 50,
+  b: double.tryParse(modeController.text) ?? 120,
+  c: double.tryParse(maxController.text) ?? 200,
+  target: double.tryParse(targetController.text) ?? 150,
+  probType: selectedOption,
+  probability: probability, 
+),
               const SizedBox(height: 20),
               
               // Results Section
@@ -132,7 +142,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        resultText,
+                        'Probability that sales ${selectedOption == 'less than' ? '<' : '>'}  \$${targetController.text}: ${(area * 100).toStringAsFixed(1)}%',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -150,7 +160,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Probability: ${(probability * 100).toStringAsFixed(2)}%',
+                        'Probability: ${(probability )}%',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -179,13 +189,10 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                           color: Colors.blue,
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'This calculator finds the probability that a random variable X '
-                        'is less than a target value, where X follows a triangular distribution '
-                        'with minimum (a), mode (b), and maximum (c) values.',
-                        style: TextStyle(fontSize: 14),
-                      ),
+                      SizedBox(height: 10,),
+
+                
+                      
                     ],
                   ),
                 ),
@@ -197,17 +204,49 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
     );
   }
 
-  Widget _buildInputField(String label, TextEditingController controller, String prefix) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixText: prefix,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      onChanged: (value) => calculateProbability(),
+
+  Widget _buildOperationDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Operation Type',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: DropdownButton<String>(
+            value: selectedOption,
+            isExpanded: true,
+            underline: const SizedBox(), // Remove default underline
+            items: <String>['less than', 'greater than']
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(
+                  value,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedOption = newValue!;
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 

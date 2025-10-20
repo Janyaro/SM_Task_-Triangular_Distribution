@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sm_task/Triangle.dart';
+import 'package:sm_task/triangular_distribution_calculation.dart';
 void main() {
   runApp(const MyApp());
 }

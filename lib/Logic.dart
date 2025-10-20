@@ -5,19 +5,17 @@ class Logic {
 
   // formula to Calculate the Probability 
   double calculateProbability(double a, double b, double c, double x) {
-    if(a >= b || b >= c){
-      return 0.0;
-    }
-    else if (a <= x && x <= b) {
+    
+     if (a <= x && x <= b) {
       // Case 1: when a ≤ x ≤ b 
-      double numerator = (x - a) * (x - a);
-      double denominator = (c - a) * (b - a);
+      double numerator = 2 * (x - a);
+      double denominator =  (b - a) * (c - a) ;
       return numerator / denominator;  // Direct CDF, not 1 - CDF
       
-    } else if (b <= x && x <= c) {
+    } else if (b < x && x <= c) {
       // Case 2: when b ≤ x ≤ c 
-      double numerator = (x - a) * (2 * b - a - x);
-      double denominator = (c - a) * (c - b);
+      double numerator =  2* (c-x);
+      double denominator =(c - b) * (c - a);
       return numerator / denominator;
       
     } else if (x < a) {
@@ -27,16 +25,21 @@ class Logic {
     }
   }
    
-  double calculateArea (double target , double a , double b , double c){
-    double base = target - a;
-    double height = calculateProbability(a, b, c, target);
-
+  double calculateArea ( String probType,double target , double a , double b , double c , ){
+double base = target - a;
+double height ;
+    if(probType == 'less than'){
+    height = calculateProbability(a, b, c, target);
+    }
+    else{
+    height = 1 - calculateProbability(a, b, c, target);
+ 
+    }
+    
     double area = 0.5 * base * height;
     return area;
+    
   }
 
-  String getProbabilityResult(double target , double a , double b , double c) {
-    double probability = calculateProbability(a, b, c, target);
-    return "Probability that sales > \$$target: ${(probability * 100).toStringAsFixed(1)}%";
-  }
+  
 }
