@@ -142,7 +142,7 @@ TriangularChart(
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Probability that sales ${selectedOption == 'less than' ? '<' : '>'}  \$${targetController.text}: ${(area * 100).toStringAsFixed(1)}%',
+                        'Probability  ${selectedOption == 'less than' ? '<' : '>'}  \$${targetController.text}: ${(area).toStringAsFixed(4)}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -160,7 +160,7 @@ TriangularChart(
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Probability: ${(probability )}%',
+                        'Probability: ${(probability )}',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -173,30 +173,7 @@ TriangularChart(
               
               const SizedBox(height: 20),
               
-              // Explanation Section
-              const Card(
-                elevation: 4,
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'About Triangular Distribution',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      SizedBox(height: 10,),
-
-                
-                      
-                    ],
-                  ),
-                ),
-              ),
+              
             ],
           ),
         ),
@@ -205,7 +182,7 @@ TriangularChart(
   }
 
 
-  Widget _buildOperationDropdown() {
+  Widget _buildOperationDropdown() { 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

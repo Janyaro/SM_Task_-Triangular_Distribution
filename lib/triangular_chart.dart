@@ -68,6 +68,7 @@ class TriangularChart extends StatelessWidget {
                         },
                       ),
                     ),
+                    // hide the left , right ,top , bottom coordinates numbers
                     leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -169,7 +170,7 @@ class TriangularChart extends StatelessWidget {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    'P(X ${probType == 'less than' ? '<' : '>'} ${target.toInt()}) = ${(probability * 100).toStringAsFixed(1)}%',
+                    'P(X ${probType == 'less than' ? '<' : '>'} ${target.toInt()}) = ${(probability * 100).toStringAsFixed(4)}%',
                     style: TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
@@ -251,7 +252,7 @@ class TriangularChart extends StatelessWidget {
 
   double _calculatePDF(double a, double b, double c, double x) {
     if (x < a || x > c) return 0.0;
-    if (x <= b) {
+    if (a <= x && x <= b) {
       return 2 * (x - a) / ((b - a) * (c - a));
     } else {
       return 2 * (c - x) / ((c - b) * (c - a));

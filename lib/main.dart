@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sm_task/triangular_distribution_calculation.dart';
-void main() {
+void main()async {
+    WidgetsFlutterBinding.ensureInitialized();
+  
+  // Add a small delay to ensure framework is ready
+  await Future.delayed(Duration(milliseconds: 100));
   runApp(const MyApp());
 }
 
