@@ -20,19 +20,116 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
   
   double probability = 0.0;
   double area = 0.0;
-  String selectedOption = 'less than'; // Default option
+  String selectedOption = 'less than';
+  String? errorMessage;
+  bool showError = false;
 
   Logic triangularSolution = Logic();
 
+  // Input validation function
+  List<String> _validateInput() {
+    List<String> errors = [];
+    
+    double a = double.tryParse(minController.text) ?? 0;
+    double b = double.tryParse(modeController.text) ?? 0;
+    double c = double.tryParse(maxController.text) ?? 0;
+    double x = double.tryParse(targetController.text) ?? 0;
+
+    // Check for empty fields
+    if (minController.text.isEmpty || maxController.text.isEmpty || 
+        modeController.text.isEmpty || targetController.text.isEmpty) {
+      errors.add("All fields must be filled");
+      return errors;
+    }
+
+    // Check for valid numbers
+    if (a.isNaN || b.isNaN || c.isNaN || x.isNaN) {
+      errors.add("All values must be valid numbers");
+      return errors;
+    }
+
+    // Check parameter order rule: a ≤ b ≤ c
+    if (a > c) {
+      errors.add("Minimum (a) must be less than or equal to Maximum (c)\n"
+          "Rule Violated: a ≤ b ≤ c");
+    }
+
+    if (b < a) {
+      errors.add("Mode (b) must be greater than or equal to Minimum (a)\n"
+          "Rule Violated: a ≤ b ≤ c");
+    }
+
+    if (b > c) {
+      errors.add("Mode (b) must be less than or equal to Maximum (c)\n"
+          "Rule Violated: a ≤ b ≤ c");
+    }
+
+    // Check for degenerate cases
+    if (a == c) {
+      errors.add("Minimum and Maximum cannot be equal\n"
+          "Rule Violated: Distribution must have a valid range (a < c)");
+    }
+
+    if (a == b && b == c) {
+      errors.add("All parameters cannot be equal\n"
+          "Rule Violated: Triangular distribution requires variation in parameters");
+    }
+
+    // Check for division by zero scenarios
+    if ((a <= x && x <= b) && (b == a || c == a)) {
+      errors.add("Invalid parameters for probability calculation\n"
+          "Rule Violated: Cannot have b = a or c = a when calculating probability between a and b");
+    }
+
+    if ((b <= x && x <= c) && (c == b || c == a)) {
+      errors.add("Invalid parameters for probability calculation\n"
+          "Rule Violated: Cannot have c = b or c = a when calculating probability between b and c");
+    }
+
+    // Check if target value is within reasonable bounds for display
+    if (x < a - 100 || x > c + 100) {
+      errors.add("Target value is too far outside the distribution range\n"
+          "Rule Violated: Target value should be reasonably close to the distribution range for meaningful probability calculation");
+    }
+
+    return errors;
+  }
+
   void _calculateProbability() {
+    List<String> errors = _validateInput();
+    
+    if (errors.isNotEmpty) {
+      setState(() {
+        errorMessage = errors.join('\n\n');
+        showError = true;
+        probability = 0.0;
+        area = 0.0;
+      });
+      return;
+    }
+
     double a = double.tryParse(minController.text) ?? 0;
     double b = double.tryParse(modeController.text) ?? 0;
     double c = double.tryParse(maxController.text) ?? 0;
     double x = double.tryParse(targetController.text) ?? 0;
     
     setState(() {
-      probability = triangularSolution.calculateProbability(a, b, c, x);
+      showError = false;
+      errorMessage = null;
+      
+      if (selectedOption == 'less than') {
+        probability = triangularSolution.calculateProbability(a, b, c, x);
+      } else {
+        probability = 1 - triangularSolution.calculateProbability(a, b, c, x);
+      }
       area = triangularSolution.calculateArea(selectedOption, x, a, b, c);
+    });
+  }
+
+  void _clearError() {
+    setState(() {
+      showError = false;
+      errorMessage = null;
     });
   }
 
@@ -50,6 +147,12 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Error Message Display
+              if (showError && errorMessage != null) ...[
+                _buildErrorMessage(),
+                const SizedBox(height: 16),
+              ],
+              
               // Input Section with Guide
               Card(
                 elevation: 4,
@@ -120,22 +223,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: (){
-                    double a = double.tryParse(minController.text) ?? 0;
-                    double b = double.tryParse(modeController.text) ?? 0;
-                    double c = double.tryParse(maxController.text) ?? 0;
-                    double x = double.tryParse(targetController.text) ?? 0;
-                  
-                    setState(() {
-                      if(selectedOption == 'less than'){
-                        probability = triangularSolution.calculateProbability(a, b, c, x);
-                      } else {
-                        probability = 1 - triangularSolution.calculateProbability(a, b, c, x);
-                      }
-                      area = triangularSolution.calculateArea(selectedOption, x, a, b, c);
-                    });
-                    print(probability.toString());
-                  },
+                  onPressed: _calculateProbability,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[700],
                     foregroundColor: Colors.white,
@@ -146,69 +234,131 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                 ),
               ),
 
-              // Chart Section
-              TriangularChart(
-                a: double.tryParse(minController.text) ?? 50,
-                b: double.tryParse(modeController.text) ?? 120,
-                c: double.tryParse(maxController.text) ?? 200,
-                target: double.tryParse(targetController.text) ?? 150,
-                probType: selectedOption,
-                probability: probability, 
-              ),
               const SizedBox(height: 20),
+
+              // Chart Section (only show if no errors)
+              if (!showError) ...[
+                TriangularChart(
+                  a: double.tryParse(minController.text) ?? 50,
+                  b: double.tryParse(modeController.text) ?? 120,
+                  c: double.tryParse(maxController.text) ?? 200,
+                  target: double.tryParse(targetController.text) ?? 150,
+                  probType: selectedOption,
+                  probability: probability, 
+                ),
+                const SizedBox(height: 20),
+              ],
               
-              // Results Section
-              Card(
-                color: Colors.blue[50],
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'RESULT',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+              // Results Section (only show if no errors)
+              if (!showError) ...[
+                Card(
+                  color: Colors.blue[50],
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'RESULT',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Probability  ${selectedOption == 'less than' ? '<' : '>'}  \$${targetController.text}: ${(area).toStringAsFixed(4)}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                        const SizedBox(height: 12),
+                        Text(
+                          'Probability  ${selectedOption == 'less than' ? '<' : '>'}  \$${targetController.text}: ${(area).toStringAsFixed(4)}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      LinearProgressIndicator(
-                        value: probability,
-                        backgroundColor: Colors.grey[300],
-                        color: probability > 0.5 ? Colors.red : Colors.green,
-                        minHeight: 12,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Probability: ${(probability)}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                        const SizedBox(height: 16),
+                        LinearProgressIndicator(
+                          value: probability,
+                          backgroundColor: Colors.grey[300],
+                          color: probability > 0.5 ? Colors.red : Colors.green,
+                          minHeight: 12,
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          'Probability: ${(probability).toStringAsFixed(4)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
               
               const SizedBox(height: 20),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorMessage() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        border: Border.all(color: Colors.red),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: Colors.red[700],
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Input Validation Error',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            errorMessage!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _clearError,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.close),
+              label: const Text('Dismiss'),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -232,6 +382,12 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                 label: label,
                 controller: controller,
                 suffix: suffix,
+                onChanged: (value) {
+                  // Clear error when user starts typing
+                  if (showError) {
+                    _clearError();
+                  }
+                },
               ),
             ],
           ),
@@ -377,7 +533,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
           child: DropdownButton<String>(
             value: selectedOption,
             isExpanded: true,
-            underline: const SizedBox(), // Remove default underline
+            underline: const SizedBox(),
             items: <String>['less than', 'greater than']
                 .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
@@ -391,6 +547,9 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
             onChanged: (String? newValue) {
               setState(() {
                 selectedOption = newValue!;
+                if (showError) {
+                  _clearError();
+                }
               });
             },
           ),

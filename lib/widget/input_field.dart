@@ -4,7 +4,7 @@ class ReuseInputField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String suffix;
-  const ReuseInputField({super.key, required this.label, required this.controller, required this.suffix});
+  const ReuseInputField({super.key, required this.label, required this.controller, required this.suffix, required Null Function(dynamic value) onChanged});
 
   @override
   Widget build(BuildContext context) {
