@@ -154,20 +154,20 @@ class TriangularChart extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.area_chart, color: Colors.orange, size: 16),
-                      SizedBox(width: 5),
-                      Text(
-                        'Target: (${target.toInt()}, ${targetY.toStringAsFixed(4)})',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.center,
+                  //   children: [
+                  //     Icon(Icons.area_chart, color: Colors.orange, size: 16),
+                  //     SizedBox(width: 5),
+                  //     Text(
+                  //       'Target: (${target.toInt()}, ${targetY.toStringAsFixed(4)})',
+                  //       style: TextStyle(
+                  //         color: Colors.red,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                   SizedBox(height: 5),
                   Text(
                     'P(X ${probType == 'less than' ? '<' : '>'} ${target.toInt()}) = ${(probability * 100).toStringAsFixed(4)}%',

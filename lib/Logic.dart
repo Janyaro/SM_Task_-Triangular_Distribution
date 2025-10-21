@@ -1,5 +1,4 @@
 class Logic {
-  // Using YOUR notation: a ≤ b ≤ c
   // a = minimum, b = most likely (mode), c = maximum
 
 

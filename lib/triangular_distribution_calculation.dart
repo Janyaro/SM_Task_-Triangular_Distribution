@@ -4,6 +4,7 @@ import 'package:sm_task/Logic.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:sm_task/triangular_chart.dart';
 import 'package:sm_task/widget/input_field.dart';
+
 class TriangularCalculator extends StatefulWidget {
   const TriangularCalculator({super.key});
 
@@ -23,7 +24,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
 
   Logic triangularSolution = Logic();
 
- void _calculateProbability() {
+  void _calculateProbability() {
     double a = double.tryParse(minController.text) ?? 0;
     double b = double.tryParse(modeController.text) ?? 0;
     double c = double.tryParse(maxController.text) ?? 0;
@@ -39,7 +40,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Triangular Distribution Calculator'),
+        title: const Text('Triangular Distribution'),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
       ),
@@ -49,7 +50,7 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Input Section
+              // Input Section with Guide
               Card(
                 elevation: 4,
                 child: Padding(
@@ -65,19 +66,49 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ReuseInputField(label:  'Minimum (a)',controller:  minController,suffix:  'Unit'),
+                      
+                      // Input Fields with Guide
+                      _buildInputWithGuide(
+                        label: 'Minimum (a)',
+                        controller: minController,
+                        suffix: 'Unit',
+                        guideText: 'The lowest possible value in the distribution. All values will be ≥ a.',
+                      ),
                       const SizedBox(height: 12),
-                      ReuseInputField(label: 'Mode (b - Most Likely)',controller:  modeController,suffix:  'Unit'),
+                      
+                      _buildInputWithGuide(
+                        label: 'Mode (b - Most Likely)',
+                        controller: modeController,
+                        suffix: 'Unit',
+                        guideText: 'The most frequent value. Peak of the triangle. Must be between a and c.',
+                      ),
                       const SizedBox(height: 12),
-                      ReuseInputField(label: 'Maximum (c)',controller:  maxController, suffix: 'Unit'),
+                      
+                      _buildInputWithGuide(
+                        label: 'Maximum (c)',
+                        controller: maxController,
+                        suffix: 'Unit',
+                        guideText: 'The highest possible value in the distribution. All values will be ≤ c.',
+                      ),
                       const SizedBox(height: 16),
+                      
                       const Divider(),
                       const SizedBox(height: 8),
-                      ReuseInputField(label: 'Target Value (x)',controller:  targetController,suffix:  'Unit'),
+                      
+                      _buildInputWithGuide(
+                        label: 'Target Value (x)',
+                        controller: targetController,
+                        suffix: 'Unit',
+                        guideText: 'The value for which you want to calculate probability (P(X < x) or P(X > x)).',
+                      ),
                       
                       // Dropdown for operation selection
                       const SizedBox(height: 16),
                       _buildOperationDropdown(),
+                      
+                      // Additional Guide Section
+                      const SizedBox(height: 20),
+                      _buildDistributionRulesGuide(),
                     ],
                   ),
                 ),
@@ -90,16 +121,20 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: (){
-                        double a = double.tryParse(minController.text) ?? 0;
-    double b = double.tryParse(modeController.text) ?? 0;
-     double c = double.tryParse(maxController.text) ?? 0;
-     double x = double.tryParse(targetController.text) ?? 0;
+                    double a = double.tryParse(minController.text) ?? 0;
+                    double b = double.tryParse(modeController.text) ?? 0;
+                    double c = double.tryParse(maxController.text) ?? 0;
+                    double x = double.tryParse(targetController.text) ?? 0;
                   
-              setState(() {
-                   probability = triangularSolution.calculateProbability(a, b, c, x);
-                   area  = triangularSolution.calculateArea(selectedOption, x, a, b, c);
-              });
-            print(probability.toString());
+                    setState(() {
+                      if(selectedOption == 'less than'){
+                        probability = triangularSolution.calculateProbability(a, b, c, x);
+                      } else {
+                        probability = 1 - triangularSolution.calculateProbability(a, b, c, x);
+                      }
+                      area = triangularSolution.calculateArea(selectedOption, x, a, b, c);
+                    });
+                    print(probability.toString());
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[700],
@@ -109,18 +144,17 @@ class _TriangularCalculatorState extends State<TriangularCalculator> {
                   ),
                   child: const Text('Calculate Probability'),
                 ),
-
               ),
-// Chart Section - Simple call
-// Chart Section
-TriangularChart(
-  a: double.tryParse(minController.text) ?? 50,
-  b: double.tryParse(modeController.text) ?? 120,
-  c: double.tryParse(maxController.text) ?? 200,
-  target: double.tryParse(targetController.text) ?? 150,
-  probType: selectedOption,
-  probability: probability, 
-),
+
+              // Chart Section
+              TriangularChart(
+                a: double.tryParse(minController.text) ?? 50,
+                b: double.tryParse(modeController.text) ?? 120,
+                c: double.tryParse(maxController.text) ?? 200,
+                target: double.tryParse(targetController.text) ?? 150,
+                probType: selectedOption,
+                probability: probability, 
+              ),
               const SizedBox(height: 20),
               
               // Results Section
@@ -160,7 +194,7 @@ TriangularChart(
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Probability: ${(probability )}',
+                        'Probability: ${(probability)}',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -172,8 +206,6 @@ TriangularChart(
               ),
               
               const SizedBox(height: 20),
-              
-              
             ],
           ),
         ),
@@ -181,6 +213,146 @@ TriangularChart(
     );
   }
 
+  Widget _buildInputWithGuide({
+    required String label,
+    required TextEditingController controller,
+    required String suffix,
+    required String guideText,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Input Field
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ReuseInputField(
+                label: label,
+                controller: controller,
+                suffix: suffix,
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(width: 16),
+        
+        // Guide Section
+        Expanded(
+          flex: 3,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.blue[100]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue[600],
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Guide:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  guideText,
+                  style:  TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDistributionRulesGuide() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        border: Border.all(color: Colors.blue[100]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Triangular Distribution Rules:',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildRuleItem('1. Minimum (a) ≤ Mode (b) ≤ Maximum (c)'),
+          _buildRuleItem('2. Probability density function forms a triangle'),
+          _buildRuleItem('3. Area under the triangle = 1 (total probability)'),
+          _buildRuleItem('4. Used when minimum, maximum and most likely values are known'),
+          _buildRuleItem('5. Continuous probability distribution'),
+          const SizedBox(height: 8),
+          Text(
+            'Formula: f(x) = 2(x-a)/((b-a)(c-a)) for a ≤ x ≤ b\n'
+            '         f(x) = 2(c-x)/((c-b)(c-a)) for b ≤ x ≤ c',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[700],
+              fontFamily: 'Monospace',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRuleItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.check_circle,
+            color: Colors.green,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildOperationDropdown() { 
     return Column(
